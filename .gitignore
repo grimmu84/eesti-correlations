@@ -1,0 +1,13 @@
+# Files Git should not track.
+
+# Compiled code made by Maven
+target/
+
+# Downloaded data (delete the folder to re-download)
+cache/
+
+# Editor and tool settings
+.idea/
+*.iml
+.vscode/
+.claude/
