@@ -13,20 +13,26 @@ import java.util.Map;
 /** Writes index.html: one Chart.js line chart per correlated pair. */
 public class HtmlReport {
 
+    // The titles are in Estonian. They only use the nicknames in their basic form (nimetav kääne),
+    // so any nickname fits into any title without changing its grammar.
     private static final List<String> TOGETHER_TITLES = List.of(
-            "%s and %s: separated at birth?",
-            "Breaking: %s and %s spotted holding hands",
-            "The secret link between %s and %s",
-            "More %s, more %s. Suspicious.",
-            "%s × %s: a love story",
-            "%s and %s, dancing to the same beat");
+            "%s ja %s – sünnil lahutatud kaksikud?",
+            "Värske uudis: %s ja %s jalutavad käsikäes",
+            "%s ja %s: salajane side, millest keegi ei räägi",
+            "%s ja %s? Väga kahtlane.",
+            "%s × %s: üks armastuslugu",
+            "%s ja %s tantsivad samas taktis",
+            "Teadlased hämmingus: %s ja %s käivad ühte jalga",
+            "%s ja %s – parimad sõbrad igavesti",
+            "Kes oleks arvanud: %s ja %s on hingesugulased",
+            "%s ja %s: puhas juhus (või ongi?)");
 
     private static final List<String> OPPOSITE_TITLES = List.of(
-            "%s vs. %s: the eternal rivalry",
-            "More %s, less %s. Explain that.",
-            "%s and %s simply cannot stand each other",
-            "Up with %s, down with %s",
-            "The seesaw of %s and %s");
+            "%s vs. %s: igavene rivaalitsemine",
+            "%s ja %s ei salli teineteist silmaotsaski",
+            "%s ja %s kiigel: üks üles, teine alla",
+            "%s ja %s: nagu kass ja koer",
+            "%s ja %s liiguvad alati vastassuunas");
 
     public static void write(List<Correlations.Pair> pairs, Path file) throws IOException {
         List<Map<String, Object>> charts = new ArrayList<>();
@@ -59,11 +65,11 @@ public class HtmlReport {
 
     private static final String TEMPLATE = """
             <!doctype html>
-            <html lang="en">
+            <html lang="et">
             <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>Estonian Spurious Correlations</title>
+            <title>Eesti kahtlased korrelatsioonid</title>
             <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
             <style>
               :root { --bg: #f6f5f1; --card: #ffffff; --text: #1d1d1b; --muted: #6b6a66; --grid: #e4e2dc;
@@ -88,32 +94,35 @@ public class HtmlReport {
             </head>
             <body>
             <main>
-              <h1>Estonia's most suspicious correlations</h1>
-              <p class="intro">Yearly data from Statistics Estonia. Each chart shows the <b>percent change from the
-                previous year</b> of two unrelated things, and the pairs below are the ones whose changes line up
-                best. Correlation is not causation: these are coincidences, not discoveries.</p>
+              <h1>Eesti kõige kahtlasemad korrelatsioonid</h1>
+              <p class="intro">Statistikaameti aastaandmed. Iga graafik näitab kahe omavahel mitteseotud näitaja
+                <b>muutust võrreldes eelmise aastaga</b> ning siin on paarid, mille muutused langevad kõige paremini
+                kokku. Korrelatsioon ei tähenda põhjuslikku seost: need on kokkusattumused, mitte avastused.</p>
               <div class="grid" id="grid"></div>
-              <footer>Data: Statistics Estonia (andmed.stat.ee). r = Pearson correlation of year-over-year changes.</footer>
+              <footer>Andmed: Statistikaamet (andmed.stat.ee). r = aastaste muutuste Pearsoni korrelatsioonikordaja.</footer>
             </main>
             <script>
             const charts = /*DATA*/;
             const css = getComputedStyle(document.documentElement);
             const color = name => css.getPropertyValue(name).trim();
             const grid = document.getElementById("grid");
+            // Estonian number format: decimal comma and a real minus sign, e.g. "+12,3" or "−0,56".
+            const signed = (v, digits) => (v > 0 ? "+" : "") +
+              v.toLocaleString("et-EE", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
             charts.forEach((c, i) => {
               const card = document.createElement("section");
               card.className = "card";
-              const direction = c.r > 0 ? "move together" : "move in opposite directions";
+              const direction = c.r > 0 ? "liiguvad koos" : "liiguvad vastassuunas";
               card.innerHTML = `<h2></h2><p class="meta"></p><div class="canvas-box"><canvas></canvas></div>`;
               card.querySelector("h2").textContent = `${i + 1}. ${c.title}`;
               card.querySelector(".meta").textContent =
-                `${c.nameA} vs ${c.nameB} · r = ${c.r > 0 ? "+" : ""}${c.r.toFixed(2)} over ${c.years.length} years (they ${direction})`;
+                `${c.nameA} vs ${c.nameB} · r = ${signed(c.r, 2)} · ${c.years.length} aastat (${direction})`;
               grid.appendChild(card);
 
               const percentAxis = (position, colorName, title) => ({
                 position, title: { display: true, text: title, color: color(colorName) },
-                ticks: { color: color(colorName), callback: v => v + "%" },
+                ticks: { color: color(colorName), callback: v => v.toLocaleString("et-EE") + "%" },
                 grid: { color: position === "left" ? color("--grid") : "transparent" }
               });
               new Chart(card.querySelector("canvas"), {
@@ -130,12 +139,12 @@ public class HtmlReport {
                   interaction: { mode: "index", intersect: false },
                   plugins: {
                     legend: { labels: { color: color("--text") } },
-                    tooltip: { callbacks: { label: t => `${t.dataset.label}: ${t.parsed.y > 0 ? "+" : ""}${t.parsed.y}%` } }
+                    tooltip: { callbacks: { label: t => `${t.dataset.label}: ${signed(t.parsed.y, 1)}%` } }
                   },
                   scales: {
                     x: { ticks: { color: color("--muted") }, grid: { display: false } },
-                    yA: percentAxis("left", "--a", "change, %"),
-                    yB: percentAxis("right", "--b", "change, %")
+                    yA: percentAxis("left", "--a", "muutus, %"),
+                    yB: percentAxis("right", "--b", "muutus, %")
                   }
                 }
               });

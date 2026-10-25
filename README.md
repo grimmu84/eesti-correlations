@@ -4,7 +4,8 @@
 
 Downloads 32 yearly statistics from [Statistics Estonia](https://andmed.stat.ee) (births, divorces,
 sprat catches, trees eaten by moose, ...), finds pairs whose **year-over-year changes** move together,
-and draws the top 10 as charts in `index.html`.
+and draws the top 10 as charts in `index.html`. The page is in Estonian; the chart labels and funny
+titles live in `Series.java` and `HtmlReport.java`.
 
 ## How to run (Windows)
 

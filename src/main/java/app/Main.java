@@ -28,8 +28,9 @@ public class Main {
         System.out.println("Step 2: comparing pairs");
         List<Correlations.Pair> top = Correlations.topPairs(changes, 10);
         for (Correlations.Pair pair : top) {
+            // Print the ids, not the Estonian names: the Windows console often can't show õ, ä, ö, ü.
             System.out.printf("  r = %+.2f  %s  <->  %s  (%d years)%n",
-                    pair.r(), pair.a().name(), pair.b().name(), pair.years().size());
+                    pair.r(), pair.a().id(), pair.b().id(), pair.years().size());
         }
 
         // Step 3: write the web page.
