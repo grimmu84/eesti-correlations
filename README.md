@@ -1,5 +1,7 @@
 # Estonia's most suspicious correlations
 
+*Põnevaid korelatsioone statistikast*
+
 Downloads 32 yearly statistics from [Statistics Estonia](https://andmed.stat.ee) (births, divorces,
 sprat catches, trees eaten by moose, ...), finds pairs whose **year-over-year changes** move together,
 and draws the top 10 as charts in `index.html`.
